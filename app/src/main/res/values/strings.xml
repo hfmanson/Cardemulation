@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Cardemulation</string>
+    <string name="action_settings">Settings</string>
+    <string name="service_name">CardEmulation Sample</string>
+    <string name="card_title">Sample Loyalty Card</string>
+    <string name="servicedesc">Off Host</string>
+    <string name="subscription">Subscription</string>
+</resources>
