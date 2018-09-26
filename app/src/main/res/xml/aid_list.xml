@@ -32,8 +32,13 @@ limitations under the License.
     android:description="@string/service_name"
     android:requireDeviceUnlock="false">
     <aid-group android:description="@string/card_title" android:category="other">
+        <!-- GlobalPlatform -->
         <aid-filter android:name=""/>
+        <!-- ISO 7816 Applet -->
         <aid-filter android:name="F276A288BCFBA69D34F31001"/>
+        <!-- Joost Applet -->
         <aid-filter android:name="01020304050601"/>
+        <!-- HelloApplet -->
+        <aid-filter android:name="D2760001180002FF49502589C0019B01"/>
     </aid-group>
 </host-apdu-service>

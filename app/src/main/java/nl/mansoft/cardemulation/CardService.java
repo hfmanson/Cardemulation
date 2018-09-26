@@ -16,7 +16,6 @@
 
 package nl.mansoft.cardemulation;
 
-import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -37,16 +36,16 @@ import static nl.mansoft.isoappletprovider.Util.ByteArrayToHexString;
  */
 
 public class CardService extends HostApduService {
-    private static final String TAG = "CardService";
+    private static final String TAG = CardService.class.getSimpleName();
+    public static final int INS_SELECT = 0xA4;
     private SmartcardIO mSmartcardIO;
-    private ApduResponse mApduResponse;
-    public final int MAX_RESPONSE_SIZE = 0xF0;
 
     @Override
     public void onCreate() {
         super.onCreate();
         try {
             mSmartcardIO = new SmartcardIO();
+            mSmartcardIO.debug = true;
             mSmartcardIO.setup(getBaseContext(), new SEService.CallBack() {
                 @Override
                 public void serviceConnected(SEService seService) {
@@ -77,16 +76,16 @@ public class CardService extends HostApduService {
     }
 
     /**
-     * Determine if commandApdu is a SELECT AID command
-     * @param commandApdu
+     * Determine if commandAPDU is a SELECT AID command
+     * @param commandAPDU
      * @return aid if command is SELECT AID, null otherwise
      */
-    private byte[] testSelectApdu(byte[] commandApdu) {
+    private byte[] testSelectApdu(CommandAPDU commandAPDU) {
         byte[] aid = null;
-        if (commandApdu[0] == 0x00 && commandApdu[1] == SmartcardIO.INS_SELECT && commandApdu[2] == 0x04) {
-            int aidLength = commandApdu[4] & 0xff;
+        if (commandAPDU.getCLA() == 0x00 && commandAPDU.getINS() == INS_SELECT && commandAPDU.getP1() == 0x04) {
+            int aidLength = commandAPDU.getNc();
             aid = new byte[aidLength];
-            System.arraycopy(commandApdu, 5, aid, 0, aidLength);
+            System.arraycopy(commandAPDU.getData(), 0, aid, 0, aidLength);
         }
         return aid;
     }
@@ -96,7 +95,7 @@ public class CardService extends HostApduService {
      * @param aid
      * @return result of SIM SELECT command
      */
-    private byte[] selectAid(byte[] aid) {
+    private ResponseAPDU selectAid(byte[] aid) {
         byte[] result = null;
         Log.d(TAG, "Selecting AID: " + ByteArrayToHexString(aid));
         try {
@@ -105,7 +104,7 @@ public class CardService extends HostApduService {
         } catch (Exception e) {
             Log.e(TAG, "Error opening channel: " + e.getMessage());
         }
-        return result;
+        return result == null ? null : new ResponseAPDU(result);
     }
 
     /**
@@ -122,40 +121,36 @@ public class CardService extends HostApduService {
      * cannot return a response APDU immediately, return null and use the {@link
      * #sendResponseApdu(byte[])} method later.
      *
-     * @param commandApdu The APDU that received from the remote device
-     * @param extras A bundle containing extra data. May be null.
-     * @return a byte-array containing the response APDU, or null if no response APDU can be sent
+     * @param commandAPDU The APDU that received from the remote device
+     * @param bundle A bundle containing extra data. May be null.
+     * @return The response APDU, or null if no response APDU can be sent
      * at this point.
      */
     // BEGIN_INCLUDE(processCommandApdu)
+
     @Override
-    public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
-        Log.i(TAG, "Received APDU: " + ByteArrayToHexString(commandApdu));
-        // If the APDU matches the SELECT AID command for this service,
-        // send the loyalty card account number, followed by a SELECT_OK status trailer (0x9000).
-        byte[] result = null;
-        byte[] aid = testSelectApdu(commandApdu);
+    ResponseAPDU processCommandApdu(CommandAPDU commandAPDU, Bundle bundle) {
+        ResponseAPDU responseAPDU = null;
+        Log.i(TAG, "Received APDU: " + ByteArrayToHexString(commandAPDU.getBytes()));
+        byte[] aid = testSelectApdu(commandAPDU);
         if (aid != null) {
-            result = selectAid(aid);
+            responseAPDU = selectAid(aid);
         } else {
             try {
-                if (commandApdu[1] == (byte) 0xc0) {
-                    Log.i(TAG, "Got GET RESPONSE");
-                    result = mApduResponse.getResponse();
-                } else {
-                    ResponseAPDU responseAPDU = mSmartcardIO.runAPDU(new CommandAPDU(commandApdu));
-                    byte[] data = responseAPDU.getData();
-                    Log.i(TAG, "Response from SIM: " + ByteArrayToHexString(data));
-                    mApduResponse = new ApduResponse(data, MAX_RESPONSE_SIZE);
-                    result = mApduResponse.getResponse();
-                }
+                responseAPDU = mSmartcardIO.runAPDU(commandAPDU);
+                Log.i(TAG, "Response from SIM");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        Log.i(TAG, "Response APDU: " + ByteArrayToHexString(result));
-
-        return result;
+        if (responseAPDU == null) {
+            Log.i(TAG, "Response APDU is null ");
+        } else {
+            byte[] bytes = responseAPDU.getBytes();
+            Log.i(TAG, "Response APDU: " + (bytes == null ? "(null)" : ByteArrayToHexString(bytes)));
+        }
+        return responseAPDU;
     }
     // END_INCLUDE(processCommandApdu)
 }
+
