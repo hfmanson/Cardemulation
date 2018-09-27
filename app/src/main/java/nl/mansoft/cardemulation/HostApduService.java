@@ -3,10 +3,13 @@ package nl.mansoft.cardemulation;
 import android.os.Bundle;
 import android.util.Log;
 
+import nl.mansoft.isoappletprovider.TransmitCallback;
 import nl.mansoft.smartcardio.CommandAPDU;
 import nl.mansoft.smartcardio.ResponseAPDU;
 
-public abstract class HostApduService extends android.nfc.cardemulation.HostApduService  {
+import static nl.mansoft.isoappletprovider.Util.ByteArrayToHexString;
+
+public abstract class HostApduService extends android.nfc.cardemulation.HostApduService implements TransmitCallback {
     private static final String TAG = HostApduService.class.getSimpleName();
     private ApduResponse mApduResponse;
     public final int MAX_RESPONSE_SIZE = 0xF0;
@@ -26,6 +29,13 @@ public abstract class HostApduService extends android.nfc.cardemulation.HostApdu
             }
         }
         return result;
+    }
+    @Override
+    public void callBack(ResponseAPDU responseAPDU) {
+        mApduResponse = new ApduResponse(responseAPDU.getData(), MAX_RESPONSE_SIZE);
+        byte[] bytes = mApduResponse.getResponse();
+        Log.i(TAG, "Response APDU (async): " + (bytes == null ? "(null)" : ByteArrayToHexString(bytes)));
+        sendResponseApdu(bytes);
     }
 
     abstract ResponseAPDU processCommandApdu(CommandAPDU commandAPDU, Bundle bundle);

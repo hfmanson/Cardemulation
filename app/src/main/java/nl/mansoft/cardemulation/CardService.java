@@ -137,7 +137,7 @@ public class CardService extends HostApduService {
             responseAPDU = selectAid(aid);
         } else {
             try {
-                responseAPDU = mSmartcardIO.runAPDU(commandAPDU);
+                mSmartcardIO.runAPDU(commandAPDU, this);
                 Log.i(TAG, "Response from SIM");
             } catch (Exception e) {
                 e.printStackTrace();
