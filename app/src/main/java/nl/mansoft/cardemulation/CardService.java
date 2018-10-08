@@ -43,22 +43,8 @@ public class CardService extends HostApduService {
     @Override
     public void onCreate() {
         super.onCreate();
-        try {
-            mSmartcardIO = new SmartcardIO();
-            mSmartcardIO.debug = true;
-            mSmartcardIO.setup(getBaseContext(), new SEService.CallBack() {
-                @Override
-                public void serviceConnected(SEService seService) {
-                    try {
-                        mSmartcardIO.setSession();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error: " + e.getMessage());
-                    }
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mSmartcardIO = new SmartcardIO(this, null, null);
+        mSmartcardIO.mDebug = true;
     }
 
     /**

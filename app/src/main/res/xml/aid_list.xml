@@ -33,7 +33,7 @@ limitations under the License.
     android:requireDeviceUnlock="false">
     <aid-group android:description="@string/card_title" android:category="other">
         <!-- GlobalPlatform -->
-        <aid-filter android:name=""/>
+        <aid-filter android:name="FF00000151000001"/>
         <!-- ISO 7816 Applet -->
         <aid-filter android:name="F276A288BCFBA69D34F31001"/>
         <!-- Joost Applet -->

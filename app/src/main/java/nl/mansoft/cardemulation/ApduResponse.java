@@ -15,15 +15,13 @@ public class ApduResponse {
 
     public byte[] getResponse() {
         byte[] result = null;
-        if (mResponse.length - mOffset > mMaxResponseLength) {
+        if (mResponse.length - mOffset > mMaxResponseLength + 2) {
             result = Arrays.copyOfRange(mResponse, mOffset, mOffset + mMaxResponseLength + 2);
             result[result.length - 2] = (byte) 0x61;
             result[result.length - 1] = (byte) 0x00;
             mOffset += mMaxResponseLength;
         } else {
-            result = Arrays.copyOfRange(mResponse, mOffset, mResponse.length + 2);
-            result[result.length - 2] = (byte) 0x90;
-            result[result.length - 1] = (byte) 0x00;
+            result = Arrays.copyOfRange(mResponse, mOffset, mResponse.length);
         }
         return result;
     }

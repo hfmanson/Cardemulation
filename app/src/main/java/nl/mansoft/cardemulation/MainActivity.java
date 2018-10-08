@@ -1,13 +1,12 @@
 package nl.mansoft.cardemulation;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.nfc.NfcAdapter;
 import android.nfc.cardemulation.CardEmulation;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
     public static final String TAG = MainActivity.class.getSimpleName();
     private CardEmulation mCardEmulation;
     private ComponentName mOffHostService;
